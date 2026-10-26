@@ -1,0 +1,45 @@
+{
+  "name": "claude-usage-by-chat",
+  "displayName": "Claude usage by chat",
+  "description": "Shows Claude usage in the status bar.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": { "vscode": "^1.80.0" },
+  "main": "./extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "configuration": {
+      "title": "Claude usage by chat",
+      "properties": {
+        "claudeUsage.limit5h": {
+          "type": "number",
+          "default": 7500000,
+          "description": "Weighted-token limit for the 5h window. With autoCalibrate on, a fallback until the first calibration."
+        },
+        "claudeUsage.autoCalibrate": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use the 5h limit calibrated from the server 5h percent (once that is at least 10%) instead of limit5h. The estimate is shown in the tooltip either way."
+        },
+        "claudeUsage.limitWeekly": {
+          "type": "number",
+          "default": 37500000,
+          "description": "Weighted-token limit for the weekly window (placeholder, calibrate)."
+        },
+        "claudeUsage.refreshSeconds": {
+          "type": "number",
+          "default": 60,
+          "description": "How often to recompute usage."
+        },
+        "claudeUsage.chatRefreshSeconds": {
+          "type": "number",
+          "default": 5,
+          "description": "How often to recompute the focused chat usage (local logs only, no server call)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node test/usage.test.js"
+  }
+}
