@@ -2,7 +2,7 @@ const assert = require("assert");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { gearHost, weights, weigh, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, planKey, PLAN_LIMITS5H, sessionTotals, sessionUsage, findSessionByTitle, projectDir, activeUsage, activeSessions, parsePs, processTree, processUsage } = require("../usage");
+const { weights, weigh, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, planKey, PLAN_LIMITS5H, sessionTotals, sessionUsage, findSessionByTitle, projectDir, activeUsage, activeSessions, parsePs, processTree, processUsage } = require("../usage");
 
 assert.strictEqual(
   weigh({ input_tokens: 10, output_tokens: 2, cache_creation_input_tokens: 4, cache_read_input_tokens: 100 }),
@@ -35,12 +35,6 @@ assert.strictEqual(weigh({ output_tokens: 4 }, "claude-haiku-5-5"), 0.5);
 assert.strictEqual(weigh({ output_tokens: 4, cache_read_input_tokens: 100001 }, "claude-haiku-5-5"),
   (0.5 + 100001 * 0.0025) * 5);
 assert.strictEqual(weigh({ output_tokens: 1, speed: "fast" }, "claude-opus-5-5"), 10);
-
-// the gear goes on the last shown section, never on 5h/week (its click fetches the server)
-assert.strictEqual(gearHost(["limits", "chats", "chat", "cpu", "cost"]), "cost");
-assert.strictEqual(gearHost(["limits", "chat"]), "chat");
-assert.strictEqual(gearHost(["limits"]), undefined);
-assert.strictEqual(gearHost([]), undefined);
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "usage-"));
 fs.mkdirSync(path.join(root, "proj", "sess", "subagents"), { recursive: true });

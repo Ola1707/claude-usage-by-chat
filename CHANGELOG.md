@@ -4,7 +4,7 @@
 
 - Choose which sections the status bar shows (settings **Show …**), each with an example picture.
 - CPU and memory is off by default (setting **Show Cpu Memory**).
-- The ⚙ is glued to the last section, no gap.
+- The ⚙ stays right after the last section, even with other extensions' items in the status bar.
 - README: a short explanation first, with pictures of each section.
 
 ## 0.0.1

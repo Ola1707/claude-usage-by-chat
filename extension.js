@@ -1,6 +1,6 @@
 const vscode = require("vscode");
 const { projectDir, findSessionByTitle, sessionTotals, activeUsage, activeSessions, activeSessionFiles, fetchServerUsage, addCalibrationReading, excludeWindow, sameWindow,
-  fetchPlan, PLAN_LIMITS5H, PLAN_NAMES, processSnapshot, processTree, processUsage, BAR_ORDER, SHOW_SETTINGS, gearHost } = require("./usage");
+  fetchPlan, PLAN_LIMITS5H, PLAN_NAMES, processSnapshot, processTree, processUsage, BAR_ORDER, SHOW_SETTINGS } = require("./usage");
 
 // The chat tab's title is the session's ai-title. Keep the last chat seen, so
 // focusing a non-chat tab (or the sidebar chat, which is not a tab) keeps the value.
@@ -117,24 +117,25 @@ function activate(context) {
   // 5h and weekly (from the server); click to fetch them now
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
   // still-running chats of this workspace
-  const chatsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.5);
+  const chatsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0001);
   chatsItem.tooltip = "Still-running chats of this workspace in the current 5h window, as % of the 5h limit (count)";
   // the focused chat in its own item, so only its text gets colored
-  const chatItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -1);
+  const chatItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0002);
   chatItem.tooltip = "Focused chat in the current 5h window, as % of the 5h limit";
   // CPU and memory of the still-running chats' processes, and of the focused chat's process
-  const procItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -1.5);
+  const procItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0003);
   // cost estimate (see COST_LABEL) with its update icon in the same item, so they sit together;
   // click: fetch the server now, then a menu: write the estimate into the limit5h setting, or hide the item
-  const calItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -2);
-  // gear icon on its own, only when no section can carry it (see render)
-  const settingsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -2.5);
+  const calItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0004);
+  // gear icon, its own button right after the last section: opens this extension's settings.
+  // All our items sit between priority 0 and -0.0005, so other extensions' items (usually whole numbers) can't come between.
+  const settingsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0005);
   settingsItem.text = "$(gear)";
   settingsItem.tooltip = "Claude usage settings";
   settingsItem.command = "claudeUsage.openSettings";
 
   // The sections in bar order. Each refresh sets a section's text ("" = nothing to show); render shows the
-  // ones that have text and are switched on in the settings, and glues the gear onto the last one (gearHost).
+  // ones that have text and are switched on in the settings.
   const bar = {
     limits: { item, command: "claudeUsage.refreshServer" },
     chats: { item: chatsItem },
@@ -144,16 +145,14 @@ function activate(context) {
   };
   const enabled = (key) => vscode.workspace.getConfiguration("claudeUsage").get(SHOW_SETTINGS[key], true);
   const render = () => {
-    const shown = BAR_ORDER.filter((k) => bar[k].text && enabled(k));
-    const host = gearHost(shown);
     for (const k of BAR_ORDER) {
       const { item: it, text, command } = bar[k];
-      if (!shown.includes(k)) { it.hide(); continue; }
-      it.text = k === host ? `${text} $(gear)` : text;
-      it.command = command || (k === host ? "claudeUsage.openSettings" : undefined);
+      if (!text || !enabled(k)) { it.hide(); continue; }
+      it.text = text;
+      it.command = command;
       it.show();
     }
-    host ? settingsItem.hide() : settingsItem.show();
+    settingsItem.show();
   };
   const setText = (key, text) => { bar[key].text = text; render(); };
 

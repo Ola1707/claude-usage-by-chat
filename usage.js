@@ -356,13 +356,4 @@ async function fetchServerUsage() {
 const BAR_ORDER = ["limits", "chats", "chat", "cpu", "cost"];
 const SHOW_SETTINGS = { limits: "show5hWeek", chats: "showChats", chat: "showChat", cpu: "showCpuMemory", cost: "showCostEstimate" };
 
-/**
- * The shown section the gear icon is glued onto: the last one, so the gear sits right after the bar without a gap.
- * Not 5h/week (its click fetches the server), so with only that one shown the gear stands alone (undefined).
- */
-function gearHost(shown) {
-  const last = shown[shown.length - 1];
-  return last && last !== "limits" ? last : undefined;
-}
-
-module.exports = { BAR_ORDER, SHOW_SETTINGS, gearHost, PRICES, weights, weigh, usageSince, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, projectDir, findSessionByTitle, sessionTotals, sessionUsage, activeSessions, activeSessionFiles, activeUsage, parsePs, processSnapshot, processTree, processUsage, fetchServerUsage, PLAN_LIMITS5H, PLAN_NAMES, planKey, fetchPlan };
+module.exports = { BAR_ORDER, SHOW_SETTINGS, PRICES, weights, weigh, usageSince, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, projectDir, findSessionByTitle, sessionTotals, sessionUsage, activeSessions, activeSessionFiles, activeUsage, parsePs, processSnapshot, processTree, processUsage, fetchServerUsage, PLAN_LIMITS5H, PLAN_NAMES, planKey, fetchPlan };

@@ -14,7 +14,7 @@ Your Claude Code usage in the VS Code status bar: the 5-hour and weekly limits, 
 
 ## What each section shows
 
-Turn each one on or off in the settings (click ⚙, then **Show …**). The ⚙ sits at the end of the last section shown.
+Turn each one on or off in the settings (click ⚙ at the end of the bar, then **Show …**).
 
 | Section | What it shows | Click |
 |---|---|---|
