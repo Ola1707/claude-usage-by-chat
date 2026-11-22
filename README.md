@@ -9,6 +9,7 @@ Your Claude Code usage in the VS Code status bar: the 5-hour and weekly limits, 
 - **Setup:** install it, that's all. It starts from your plan's 5h limit. When `cost est` turns yellow, click its ⟳ → **Update** to fit the limit to your real usage ([more](#cost-estimate)).
 - **Only this computer counts in `chats` and `chat`.** Claude used elsewhere (claude.ai, your phone, another computer) shows in `5h` and `week` only. If you did, click `cost est` → **Hide until the 5h reset**.
 - **Subagents count.** A chat's usage includes the subagents it starts. Each model has its own multiplier, its API price: a token on Opus counts more than on Sonnet, and Sonnet more than Haiku.
+- **macOS only for now.** It doesn't work on Windows yet (planned). Linux isn't tested.
 - **All local.** Everything is calculated on your computer from Claude Code's own logs. The only network call is to Anthropic's usage API, with the login Claude Code already saved. Nothing is sent to anyone else.
 
 ## What each section shows
@@ -73,7 +74,7 @@ Command Palette → **Claude usage: Settings**, or click `⚙`.
 
 ## Limitations
 
-- Tested on macOS. Windows isn't tested yet.
+- Doesn't work on Windows yet: `chats` and `chat` look for the chat logs in the wrong folder. Linux isn't tested.
 - Usage outside this computer (claude.ai, your phone, another computer) counts in `5h` and `week` but not in `chats` or `chat`, and it makes `cost est` wrong for that 5h window.
 - Two open chats with the same title: `chat` may show the other one.
 - Two VS Code windows on the same folder count each other's chats in `chats`.
