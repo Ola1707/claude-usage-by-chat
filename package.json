@@ -58,19 +58,19 @@
           "type": "boolean",
           "default": true,
           "order": 2,
-          "markdownDescription": "**chats.** The chats still running in this workspace: their usage in the current 5h window, as % of the 5h limit, and how many there are.\n\n![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chats.png)"
+          "markdownDescription": "**chats.** All the chats in this workspace: their usage in the current 5h window, as % of the 5h limit. The number in brackets is how many chats are open.\n\n![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chats.png)"
         },
         "claudeUsage.showChat": {
           "type": "boolean",
           "default": true,
           "order": 3,
-          "markdownDescription": "**chat.** The chat tab you're in now: its usage in the current 5h window, as % of the 5h limit. Hover for the whole chat.\n\n![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat.png)"
+          "markdownDescription": "**chat.** The chat you're in now: its usage in the current 5h window, as % of the 5h limit. Green when small, then yellow, orange and red as it grows. Hover for the whole chat.\n\n![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat-green.png) ![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat-orange.png)"
         },
         "claudeUsage.showCpuMemory": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "order": 4,
-          "markdownDescription": "**CPU and memory.** CPU and memory of the running chats and of the chat you're in (macOS and Linux). Choose CPU, memory or both in Process Stats below.\n\n![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/cpu-memory.png)"
+          "markdownDescription": "**CPU and memory** (off by default). CPU and memory of the running chats and of the chat you're in (macOS and Linux). Choose CPU, memory or both in Process Stats below.\n\n![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/cpu-memory.png)"
         },
         "claudeUsage.showCostEstimate": {
           "type": "boolean",

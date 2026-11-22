@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Choose which sections the status bar shows (settings **Show …**), each with an example picture.
+- CPU and memory is off by default (setting **Show Cpu Memory**).
 - The ⚙ is glued to the last section, no gap.
 - README: a short explanation first, with pictures of each section.
 

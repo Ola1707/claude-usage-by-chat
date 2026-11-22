@@ -18,9 +18,9 @@ Turn each one on or off in the settings (click ⚙, then **Show …**). The ⚙ 
 | Section | What it shows | Click |
 |---|---|---|
 | ![5h and week](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/5h-week.png) | Your real 5h and weekly usage, from Anthropic's server. Hover for when each one resets. | ⟳ fetches it now. |
-| ![chats](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chats.png) | The chats still running in this workspace: their usage in the current 5h window, as % of the 5h limit, and how many. | |
-| ![chat](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat.png) | The chat tab you're in now, in the current 5h window. Its colour goes from green to red as it grows. Hover for the whole chat. | |
-| ![CPU and memory](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/cpu-memory.png) | CPU and memory of the running chats and of the chat you're in (macOS and Linux). | |
+| ![chats](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chats.png) | All the chats in this workspace: their usage in the current 5h window, as % of the 5h limit. `(3)` is how many chats are open. | |
+| ![chat, small](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat-green.png)<br>![chat, bigger](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat-orange.png) | The chat you're in now, in the current 5h window. Green when small, then yellow (above 5%), orange (above 10%) and red (above 20%). Hover for the whole chat. | |
+| ![CPU and memory](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/cpu-memory.png) | CPU and memory of the running chats and of the chat you're in (macOS and Linux). **Off by default:** turn on **Show Cpu Memory**. | |
 | ![cost est](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/cost-estimate.png) | How far the 5h limit setting is from the real limit (see [Cost estimate](#cost-estimate)). | ⟳ fetches the server and offers to update the limit. |
 
 ## Install
@@ -55,7 +55,8 @@ Command Palette → **Claude usage: Settings**, or click `⚙`.
 
 | Setting | Default | What it does |
 |---|---|---|
-| `claudeUsage.show5hWeek`, `showChats`, `showChat`, `showCpuMemory`, `showCostEstimate` | `true` | Show that section in the status bar. |
+| `claudeUsage.show5hWeek`, `showChats`, `showChat`, `showCostEstimate` | `true` | Show that section in the status bar. |
+| `claudeUsage.showCpuMemory` | `false` | Show CPU and memory of the chats. |
 | `claudeUsage.limit5h` | `0` | The 5h limit in weighted tokens. `0` means by your plan (Pro 10,000,000). The extension never changes it on its own: edit it, or click `cost est` → **Update**. |
 | `claudeUsage.refreshSeconds` | `60` | How often to recompute 5h, week and chats. |
 | `claudeUsage.chatRefreshSeconds` | `5` | How often to recompute the focused chat. |
