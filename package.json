@@ -2,67 +2,135 @@
   "name": "claude-usage-by-chat",
   "displayName": "Claude usage by chat (unofficial)",
   "description": "Claude Code usage in the status bar: 5h and weekly limits, and how much each chat uses. Unofficial, not made by Anthropic.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "uniolik",
   "license": "MIT",
   "icon": "icon.png",
-  "repository": { "type": "git", "url": "https://github.com/Ola1707/claude-usage-by-chat.git" },
-  "bugs": { "url": "https://github.com/Ola1707/claude-usage-by-chat/issues" },
-  "categories": ["Other"],
-  "keywords": ["claude", "claude code", "usage", "status bar", "tokens"],
-  "engines": { "vscode": "^1.80.0" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ola1707/claude-usage-by-chat.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Ola1707/claude-usage-by-chat/issues"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "claude",
+    "claude code",
+    "usage",
+    "status bar",
+    "tokens"
+  ],
+  "engines": {
+    "vscode": "^1.80.0"
+  },
   "main": "./extension.js",
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "commands": [
-      { "command": "claudeUsage.setLimitFromCalibration", "title": "Claude usage: Cost estimate (update the 5h limit, or hide)" },
-      { "command": "claudeUsage.refreshServer", "title": "Claude usage: Fetch 5h and weekly usage now" },
-      { "command": "claudeUsage.openSettings", "title": "Claude usage: Settings" }
+      {
+        "command": "claudeUsage.setLimitFromCalibration",
+        "title": "Claude usage: Cost estimate (update the 5h limit, or hide)"
+      },
+      {
+        "command": "claudeUsage.refreshServer",
+        "title": "Claude usage: Fetch 5h and weekly usage now"
+      },
+      {
+        "command": "claudeUsage.openSettings",
+        "title": "Claude usage: Settings"
+      }
     ],
     "configuration": {
       "title": "Claude usage by chat",
       "properties": {
-        "claudeUsage.limit5h": {
-          "type": "number",
-          "default": 0,
-          "description": "Weighted-token limit for the 5h window. 0: by your plan (Pro 10,000,000; Max 5x 45,000,000; Max 20x 180,000,000). Changes only when you edit it or click cost est → Update."
+        "claudeUsage.showLimits": {
+          "type": "boolean",
+          "default": true,
+          "order": 1,
+          "markdownDescription": "**5h and week.** Your real 5-hour and weekly usage, from Anthropic's server. Click it to fetch now; hover for when each one resets.\n\nExample: `🦄 5h: 42% week: 18% ⟳`"
+        },
+        "claudeUsage.showChats": {
+          "type": "boolean",
+          "default": true,
+          "order": 2,
+          "markdownDescription": "**chats.** All the chats in this workspace: their usage in the current 5h window, as % of the 5h limit. The number in brackets is how many chats are open.\n\nExample: `chats: 30.4% (3)`"
+        },
+        "claudeUsage.showChat": {
+          "type": "boolean",
+          "default": true,
+          "order": 3,
+          "markdownDescription": "**chat.** The chat you're in now: its usage in the current 5h window, as % of the 5h limit. Green when small, then yellow, orange and red as it grows. Hover for the whole chat.\n\nExample: `chat: 8.2%`"
+        },
+        "claudeUsage.showCpuMemory": {
+          "type": "boolean",
+          "default": false,
+          "order": 4,
+          "markdownDescription": "**CPU and memory** (off by default). CPU and memory of the running chats and of the chat you're in (macOS and Linux). Choose CPU, memory or both in Process Stats below.\n\nExample: `chats: 8% 410MB chat: 3% 180MB`"
         },
         "claudeUsage.showCostEstimate": {
           "type": "boolean",
           "default": true,
-          "description": "Show the cost estimate (cost est) in the status bar."
+          "order": 5,
+          "markdownDescription": "**cost est.** How far the 5h limit setting is from the real limit. Click it to update the limit.\n\nExample: `cost est: ×1.04 ⟳`"
+        },
+        "claudeUsage.limit5h": {
+          "type": "number",
+          "default": 0,
+          "description": "Weighted-token limit for the 5h window. 0: by your plan (Pro 10,000,000; Max 5x 45,000,000; Max 20x 180,000,000). Changes only when you edit it or click cost est → Update.",
+          "order": 10
         },
         "claudeUsage.limitWeekly": {
           "type": "number",
           "default": 37500000,
-          "description": "Weighted-token limit for the weekly window (placeholder, calibrate)."
+          "description": "Weighted-token limit for the weekly window (placeholder, calibrate).",
+          "order": 11
         },
         "claudeUsage.refreshSeconds": {
           "type": "number",
           "default": 60,
-          "description": "How often to recompute usage."
+          "description": "How often to recompute usage.",
+          "order": 12
         },
         "claudeUsage.processStats": {
           "type": "string",
-          "enum": ["cpu+memory", "cpu", "memory", "off"],
-          "enumDescriptions": ["CPU and memory", "CPU only", "Memory only", "Hide the item"],
+          "enum": [
+            "cpu+memory",
+            "cpu",
+            "memory",
+            "off"
+          ],
+          "enumDescriptions": [
+            "CPU and memory",
+            "CPU only",
+            "Memory only",
+            "Hide the item (same as turning off Show Cpu Memory)"
+          ],
           "default": "cpu+memory",
-          "description": "What the CPU/memory status bar item of the running chats shows."
+          "description": "What the CPU/memory status bar item of the running chats shows.",
+          "order": 13
         },
         "claudeUsage.processIncludeChildren": {
           "type": "boolean",
           "default": true,
-          "description": "Count a chat's child processes (shell commands, MCP servers) in the CPU/memory numbers. Off: only the chat processes themselves."
+          "description": "Count a chat's child processes (shell commands, MCP servers) in the CPU/memory numbers. Off: only the chat processes themselves.",
+          "order": 14
         },
         "claudeUsage.processRefreshSeconds": {
           "type": "number",
           "default": 5,
-          "description": "How often to update the CPU/memory item (runs ps)."
+          "description": "How often to update the CPU/memory item (runs ps).",
+          "order": 15
         },
         "claudeUsage.chatRefreshSeconds": {
           "type": "number",
           "default": 5,
-          "description": "How often to recompute the focused chat usage (local logs only, no server call)."
+          "description": "How often to recompute the focused chat usage (local logs only, no server call).",
+          "order": 16
         }
       }
     }

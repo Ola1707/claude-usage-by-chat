@@ -1,6 +1,6 @@
 const vscode = require("vscode");
 const { projectDir, findSessionByTitle, sessionTotals, activeUsage, activeSessions, activeSessionFiles, fetchServerUsage, addCalibrationReading, excludeWindow, sameWindow,
-  fetchPlan, PLAN_LIMITS5H, PLAN_NAMES, processSnapshot, processTree, processUsage } = require("./usage");
+  fetchPlan, PLAN_LIMITS5H, PLAN_NAMES, processSnapshot, processTree, processUsage, BAR_ORDER, SHOW_SETTINGS } = require("./usage");
 
 // The chat tab's title is the session's ai-title. Keep the last chat seen, so
 // focusing a non-chat tab (or the sidebar chat, which is not a tab) keeps the value.
@@ -116,53 +116,66 @@ function costColor(cost) {
 function activate(context) {
   // 5h and weekly (from the server); click to fetch them now
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
-  item.command = "claudeUsage.refreshServer";
-  item.show();
   // still-running chats of this workspace
-  const chatsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.5);
+  const chatsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0001);
   chatsItem.tooltip = "Still-running chats of this workspace in the current 5h window, as % of the 5h limit (count)";
-  chatsItem.show();
   // the focused chat in its own item, so only its text gets colored
-  const chatItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -1);
+  const chatItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0002);
   chatItem.tooltip = "Focused chat in the current 5h window, as % of the 5h limit";
-  chatItem.show();
   // CPU and memory of the still-running chats' processes, and of the focused chat's process
-  const procItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -1.5);
-  procItem.show();
+  const procItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0003);
   // cost estimate (see COST_LABEL) with its update icon in the same item, so they sit together;
   // click: fetch the server now, then a menu: write the estimate into the limit5h setting, or hide the item
-  const calItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -2);
-  calItem.command = "claudeUsage.setLimitFromCalibration";
-  calItem.show();
-  // gear icon, last: opens this extension's settings
-  const settingsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -2.5);
+  const calItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0004);
+  // gear icon, its own button right after the last section: opens this extension's settings.
+  // All our items sit between priority 0 and -0.0005, so other extensions' items (usually whole numbers) can't come between.
+  const settingsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0005);
   settingsItem.text = "$(gear)";
   settingsItem.tooltip = "Claude usage settings";
   settingsItem.command = "claudeUsage.openSettings";
-  settingsItem.show();
+
+  // The sections in bar order. Each refresh sets a section's text ("" = nothing to show); render shows the
+  // ones that have text and are switched on in the settings.
+  const bar = {
+    limits: { item, command: "claudeUsage.refreshServer" },
+    chats: { item: chatsItem },
+    chat: { item: chatItem },
+    cpu: { item: procItem },
+    cost: { item: calItem, command: "claudeUsage.setLimitFromCalibration" },
+  };
+  const enabled = (key) => vscode.workspace.getConfiguration("claudeUsage").get(SHOW_SETTINGS[key], true);
+  const render = () => {
+    for (const k of BAR_ORDER) {
+      const { item: it, text, command } = bar[k];
+      if (!text || !enabled(k)) { it.hide(); continue; }
+      it.text = text;
+      it.command = command;
+      it.show();
+    }
+    settingsItem.show();
+  };
+  const setText = (key, text) => { bar[key].text = text; render(); };
 
   const refreshCal = () => {
-    // hidden for good (setting), or until the 5h reset (Claude used elsewhere in this window)
-    if (!vscode.workspace.getConfiguration("claudeUsage").get("showCostEstimate", true) || excludedWindow()) {
-      calItem.hide();
+    // hidden until the 5h reset (Claude used elsewhere in this window); hidden for good is the showCostEstimate setting (render)
+    if (excludedWindow()) {
+      setText("cost", "");
       return;
     }
-    calItem.show();
     const cal = currentCalibration(context.globalState);
     const { limit: setting, source } = configuredLimit5h();
     if (!cal) {
       const old = context.globalState.get("limit5h");
-      calItem.text = `${COST_LABEL}: ? $(sync)`;
       calItem.color = undefined;
       calItem.tooltip = new vscode.MarkdownString(
         "No estimate for this 5h window yet (needs the server 5h percent at 10% or more)" +
         (old ? `  \nAn earlier window's estimate (${Math.round(old.limit).toLocaleString()}) is not used: ` +
           "the plan or usage elsewhere may have changed since." : "") + "\n\n" + OTHER_USAGE_WARNING);
+      setText("cost", `${COST_LABEL}: ? $(sync)`);
       return;
     }
     const cost = setting / cal.limit;
     const color = costColor(cost);
-    calItem.text = `${COST_LABEL}: ×${cost.toFixed(2)} $(sync)`;
     calItem.color = color && new vscode.ThemeColor(color);
     const advice = cost > 1.05
       ? `Your usage costs **×${cost.toFixed(2)}** what the status bar assumes: you use more than it says. ` +
@@ -175,6 +188,7 @@ function activate(context) {
       `Status bar uses: ${setting.toLocaleString()} (${source})  \n` +
       `Fitted from ${cal.samples || 1} server reading(s), last at ${Math.round(cal.percent)}%, ${new Date(cal.at || Date.now()).toLocaleTimeString()} ` +
       `(window resets ${new Date(cal.resetsAt).toLocaleTimeString()})\n\n` + OTHER_USAGE_WARNING, true);
+    setText("cost", `${COST_LABEL}: ×${cost.toFixed(2)} $(sync)`);
   };
 
   // the focused chat is local only (no server call), so it has its own, faster timer
@@ -195,7 +209,7 @@ function activate(context) {
         color = percent > 20 ? "charts.red" : percent > 10 ? "charts.orange" : percent > 5 ? "charts.yellow" : "charts.green";
       }
     } catch { /* keep "?" */ }
-    chatItem.text = chat;
+    setText("chat", chat);
     chatItem.color = color && new vscode.ThemeColor(color);
     return chat;
   };
@@ -207,7 +221,7 @@ function activate(context) {
     try {
       const config = vscode.workspace.getConfiguration("claudeUsage");
       const show = config.get("processStats", "cpu+memory");
-      if (show === "off") throw new Error("hidden");
+      if (show === "off" || !enabled("cpu")) throw new Error("hidden");
       const children = config.get("processIncludeChildren", true);
       const fmt = ({ cpu, mem }) => [show !== "memory" && `${Math.round(cpu)}%`, show !== "cpu" && mb(mem)].filter(Boolean).join(" ");
       const folders = vscode.workspace.workspaceFolders;
@@ -220,15 +234,14 @@ function activate(context) {
       const self = focused && processUsage(procs, [focused.pid]);
       const tree = focused && processUsage(procs, processTree(procs, [focused.pid]));
       const what = show === "cpu" ? "CPU (% of one core)" : show === "memory" ? "Memory" : "CPU (% of one core) and memory";
-      procItem.text = `$(pulse) chats: ${fmt(all)} chat: ${focused ? fmt(children ? tree : self) : "?"}`;
       procItem.tooltip = `${what}${children ? ", with child processes" : ", chat processes only"}\n` +
         `Still-running chats of this workspace (${sessions.length}): ${fmt(all)}\n` +
         (focused ? `Focused chat process (pid ${focused.pid}): ${fmt(self)}\nFocused chat with its child processes: ${fmt(tree)}`
           : "Focused chat: no running process found") +
         "\nSubagents run inside the chat's process; child processes are shell commands and MCP servers." +
         "\nConfigure with the claudeUsage.process* settings.";
-      procItem.show();
-    } catch { procItem.hide(); }
+      setText("cpu", `$(pulse) chats: ${fmt(all)} chat: ${focused ? fmt(children ? tree : self) : "?"}`);
+    } catch { setText("cpu", ""); }
   };
 
   const refresh = async (force = false) => {
@@ -246,8 +259,7 @@ function activate(context) {
       const { count, total } = activeUsage(folders.map((f) => f.uri.fsPath), windowStart5h());
       chats = `chats: ${((total / configuredLimit5h().limit) * 100).toFixed(1)}% (${count})`;
     } catch { /* leave the chats part out */ }
-    chatsItem.text = chats;
-    chats ? chatsItem.show() : chatsItem.hide();
+    setText("chats", chats);
     try {
       const { fiveHour, weekly } = await cachedServerUsage((calib) => calibrate(context.globalState, calib), force);
       refreshCal();
@@ -255,13 +267,13 @@ function activate(context) {
       const calInfo = cal && `${Math.round(cal.limit).toLocaleString()} (calibrated at ${Math.round(cal.percent)}%)`;
       const limitInfo = `5h limit: ${configuredLimit5h().limit.toLocaleString()} (${configuredLimit5h().source})` +
         (cal ? `\nCalibrated estimate (click cost est to use it): ${calInfo}` : "");
-      item.text = `🦄 5h: ${Math.round(fiveHour.percent)}% week: ${Math.round(weekly.percent)}% $(sync)`;
       item.tooltip = `Claude usage (click to fetch from the server now)\n5h resets ${new Date(fiveHour.resetsAt).toLocaleTimeString()}\nWeek resets ${new Date(weekly.resetsAt).toLocaleString()}\n${limitInfo}${tabInfo}`;
+      setText("limits", `🦄 5h: ${Math.round(fiveHour.percent)}% week: ${Math.round(weekly.percent)}% $(sync)`);
     } catch (err) {
       // server unavailable: show "?" rather than a wrong number, with the error on hover
       debugDump({ serverError: String(err && (err.stack || err)), cause: String(err && err.cause) });
-      item.text = "$(warning) 5h: ? week: ? $(sync)";
       item.tooltip = `Claude usage unavailable: ${err && err.message}${tabInfo}`;
+      setText("limits", "$(warning) 5h: ? week: ? $(sync)");
     }
   };
 
@@ -312,6 +324,7 @@ function activate(context) {
         { id: "window", label: "$(eye-closed) Hide until the 5h reset",
           detail: "I used Claude elsewhere in this window (claude.ai, another computer): its estimate would be wrong, so it is not calculated either." },
         { id: "forever", label: "$(close) Hide for good", detail: "Show it again with the claudeUsage.showCostEstimate setting." },
+        { id: "settings", label: "$(gear) Open settings", detail: "Choose which sections the status bar shows, and more." },
       ];
       const pick = await vscode.window.showQuickPick(items, { title: "Claude usage: cost estimate" });
       if (!pick) return;
@@ -328,6 +341,8 @@ function activate(context) {
         vscode.window.showInformationMessage(`Cost estimate hidden until the 5h reset at ${new Date(c.value.fiveHour.resetsAt).toLocaleTimeString()}.`);
       } else if (pick.id === "forever") {
         await vscode.workspace.getConfiguration("claudeUsage").update("showCostEstimate", false, vscode.ConfigurationTarget.Global);
+      } else if (pick.id === "settings") {
+        vscode.commands.executeCommand("claudeUsage.openSettings");
       }
     }),
     { dispose: () => { clearInterval(timer); clearInterval(chatTimer); clearInterval(procTimer); } },
