@@ -142,11 +142,14 @@ function activate(context) {
     cost: { item: calItem, command: "claudeUsage.setLimitFromCalibration" },
   };
   const enabled = (key) => vscode.workspace.getConfiguration("claudeUsage").get(SHOW_SETTINGS[key], true);
+  // the unicorn leads the bar: it goes on whichever section is shown first
   const render = () => {
+    let first = true;
     for (const k of BAR_ORDER) {
       const { item: it, text, command } = bar[k];
       if (!text || !enabled(k)) { it.hide(); continue; }
-      it.text = text;
+      it.text = first ? `🦄 ${text}` : text;
+      first = false;
       it.command = command;
       it.show();
     }
@@ -271,7 +274,7 @@ function activate(context) {
       const limitInfo = `5h limit: ${configuredLimit5h().limit.toLocaleString()} (${configuredLimit5h().source})` +
         (cal ? `\nCalibrated estimate (click cost est to use it): ${calInfo}` : "");
       item.tooltip = `Claude usage (click to fetch from the server now)\n5h resets ${new Date(fiveHour.resetsAt).toLocaleTimeString()}\nWeek resets ${new Date(weekly.resetsAt).toLocaleString()}\n${limitInfo}${tabInfo}`;
-      setText("limits", `🦄 5h: ${Math.round(fiveHour.percent)}% week: ${Math.round(weekly.percent)}% $(sync)`);
+      setText("limits", `5h: ${Math.round(fiveHour.percent)}% week: ${Math.round(weekly.percent)}% $(sync)`);
     } catch (err) {
       // server unavailable: show "?" rather than a wrong number, with the error on hover
       debugDump({ serverError: String(err && (err.stack || err)), cause: String(err && err.cause) });

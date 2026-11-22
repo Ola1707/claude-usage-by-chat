@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- New order in the status bar: `chat`, `chats`, then `5h`/`week`, then `cost est`.
+- New order in the status bar: 🦄 `chat`, `chats`, then `5h`/`week`, then `cost est`. The 🦄 leads the first section shown.
 - New icon: a 5h ring with this chat's share.
 - README: a Questions section (how it counts) and a link to GitHub issues for bugs and questions.
 - `chat` and `chats` count each open chat from its first message, so a 5h reset no longer zeroes them. The tooltip shows the part in the current 5h window.
