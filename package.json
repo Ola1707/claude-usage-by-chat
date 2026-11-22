@@ -48,35 +48,35 @@
     "configuration": {
       "title": "Claude usage by chat",
       "properties": {
-        "claudeUsage.show5hWeek": {
+        "claudeUsage.showLimits": {
           "type": "boolean",
           "default": true,
           "order": 1,
-          "markdownDescription": "**5h and week.** Your real 5-hour and weekly usage, from Anthropic's server. Click it to fetch now; hover for when each one resets.\n\n![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/5h-week.png)"
+          "markdownDescription": "**5h and week.** Your real 5-hour and weekly usage, from Anthropic's server. Click it to fetch now; hover for when each one resets.\n\nExample: `🦄 5h: 42% week: 18% ⟳`"
         },
         "claudeUsage.showChats": {
           "type": "boolean",
           "default": true,
           "order": 2,
-          "markdownDescription": "**chats.** All the chats in this workspace: their usage in the current 5h window, as % of the 5h limit. The number in brackets is how many chats are open.\n\n![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chats.png)"
+          "markdownDescription": "**chats.** All the chats in this workspace: their usage in the current 5h window, as % of the 5h limit. The number in brackets is how many chats are open.\n\nExample: `chats: 30.4% (3)`"
         },
         "claudeUsage.showChat": {
           "type": "boolean",
           "default": true,
           "order": 3,
-          "markdownDescription": "**chat.** The chat you're in now: its usage in the current 5h window, as % of the 5h limit. Green when small, then yellow, orange and red as it grows. Hover for the whole chat.\n\n![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat-green.png) ![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat-orange.png)"
+          "markdownDescription": "**chat.** The chat you're in now: its usage in the current 5h window, as % of the 5h limit. Green when small, then yellow, orange and red as it grows. Hover for the whole chat.\n\nExample: `chat: 8.2%`"
         },
         "claudeUsage.showCpuMemory": {
           "type": "boolean",
           "default": false,
           "order": 4,
-          "markdownDescription": "**CPU and memory** (off by default). CPU and memory of the running chats and of the chat you're in (macOS and Linux). Choose CPU, memory or both in Process Stats below.\n\n![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/cpu-memory.png)"
+          "markdownDescription": "**CPU and memory** (off by default). CPU and memory of the running chats and of the chat you're in (macOS and Linux). Choose CPU, memory or both in Process Stats below.\n\nExample: `chats: 8% 410MB chat: 3% 180MB`"
         },
         "claudeUsage.showCostEstimate": {
           "type": "boolean",
           "default": true,
           "order": 5,
-          "markdownDescription": "**cost est.** How far the 5h limit setting is from the real limit. Click it to update the limit.\n\n![example](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/cost-estimate.png)"
+          "markdownDescription": "**cost est.** How far the 5h limit setting is from the real limit. Click it to update the limit.\n\nExample: `cost est: ×1.04 ⟳`"
         },
         "claudeUsage.limit5h": {
           "type": "number",

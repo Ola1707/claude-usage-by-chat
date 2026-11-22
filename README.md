@@ -56,7 +56,7 @@ Command Palette → **Claude usage: Settings**, or click `⚙`.
 
 | Setting | Default | What it does |
 |---|---|---|
-| `claudeUsage.show5hWeek`, `showChats`, `showChat`, `showCostEstimate` | `true` | Show that section in the status bar. |
+| `claudeUsage.showLimits`, `showChats`, `showChat`, `showCostEstimate` | `true` | Show that section in the status bar. |
 | `claudeUsage.showCpuMemory` | `false` | Show CPU and memory of the chats. |
 | `claudeUsage.limit5h` | `0` | The 5h limit in weighted tokens. `0` means by your plan (Pro 10,000,000). The extension never changes it on its own: edit it, or click `cost est` → **Update**. |
 | `claudeUsage.refreshSeconds` | `60` | How often to recompute 5h, week and chats. |
