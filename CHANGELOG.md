@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.0.3
 
 - New order in the status bar: 🦄 `chat`, `chats`, then `5h`/`week`, then `cost est`. The 🦄 leads the first section shown.
 - New icon: a 5h ring with this chat's share.
