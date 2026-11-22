@@ -17,14 +17,7 @@ A VS Code extension that shows your Claude Code usage in the status bar: the 5-h
 
 ## Install
 
-The extension isn't on the Marketplace yet. It has no dependencies, so you install it straight from the repo:
-
-```sh
-git clone https://github.com/Ola1707/clude-usage-by-chat.git ~/Repos/clude-usage-by-chat
-ln -s ~/Repos/clude-usage-by-chat ~/.vscode/extensions/local.claude-usage-by-chat-0.0.1
-```
-
-Then reload VS Code (Command Palette → **Developer: Reload Window**). To update: `git -C ~/Repos/clude-usage-by-chat pull`, then reload.
+In VS Code: Extensions panel → search **Claude usage by chat** → **Install**. Or from the [Marketplace page](https://marketplace.visualstudio.com/items?itemName=uniolik.claude-usage-by-chat). VS Code keeps it up to date.
 
 You need Claude Code installed and signed in. The extension uses the login Claude Code already saved.
 
@@ -79,4 +72,11 @@ Command Palette → **Claude usage: Settings**, or click `⚙`.
 
 ## Develop
 
-`npm test` runs the unit tests. [ROADMAP.md](ROADMAP.md) has the plan and the details of how it works.
+Run it from a clone instead of the Marketplace (uninstall the Marketplace one first):
+
+```sh
+git clone https://github.com/Ola1707/claude-usage-by-chat.git ~/Repos/claude-usage-by-chat
+ln -s ~/Repos/claude-usage-by-chat ~/.vscode/extensions/local.claude-usage-by-chat-0.0.1
+```
+
+Then **Developer: Reload Window**. `npm test` runs the unit tests. [ROADMAP.md](ROADMAP.md) has the plan and the details of how it works.
