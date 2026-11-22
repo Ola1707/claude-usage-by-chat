@@ -1,0 +1,9 @@
+.git/**
+.github/**
+test/**
+usage.py
+ROADMAP.md
+CLAUDE.md
+icon.svg
+*.vsix
+.gitignore
