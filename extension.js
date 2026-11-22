@@ -115,13 +115,13 @@ function costColor(cost) {
 
 function activate(context) {
   // 5h and weekly (from the server); click to fetch them now
-  const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
+  const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0003);
   // still-running chats of this workspace
   const chatsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0001);
   // the focused chat in its own item, so only its text gets colored
-  const chatItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0002);
+  const chatItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
   // CPU and memory of the still-running chats' processes, and of the focused chat's process
-  const procItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0003);
+  const procItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0002);
   // cost estimate (see COST_LABEL) with its update icon in the same item, so they sit together;
   // click: fetch the server now, then a menu: write the estimate into the limit5h setting, or hide the item
   const calItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0004);

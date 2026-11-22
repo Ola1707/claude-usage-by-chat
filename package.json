@@ -55,11 +55,11 @@
     "configuration": {
       "title": "Claude usage by chat",
       "properties": {
-        "claudeUsage.showLimits": {
+        "claudeUsage.showChat": {
           "type": "boolean",
           "default": true,
           "order": 1,
-          "markdownDescription": "**5h and week.** Your real 5-hour and weekly usage, from Anthropic's server. Click it to fetch now; hover for when each one resets.\n\nExample: `🦄 5h: 42% week: 18% ⟳`"
+          "markdownDescription": "**chat.** The chat you're in now, since its first message, as % of the 5h limit: what it really costs, so you know when to /clear. Not reset at the 5h reset. Green when small, then yellow, orange and red as it grows.\n\nExample: `chat: 8.2%`"
         },
         "claudeUsage.showChats": {
           "type": "boolean",
@@ -67,17 +67,17 @@
           "order": 2,
           "markdownDescription": "**chats.** All the open chats in this workspace, each since its first message, as % of the 5h limit. Not reset at the 5h reset. The number in brackets is how many chats are open.\n\nExample: `chats: 30.4% (3)`"
         },
-        "claudeUsage.showChat": {
-          "type": "boolean",
-          "default": true,
-          "order": 3,
-          "markdownDescription": "**chat.** The chat you're in now, since its first message, as % of the 5h limit: what it really costs, so you know when to /clear. Not reset at the 5h reset. Green when small, then yellow, orange and red as it grows.\n\nExample: `chat: 8.2%`"
-        },
         "claudeUsage.showCpuMemory": {
           "type": "boolean",
           "default": false,
-          "order": 4,
+          "order": 3,
           "markdownDescription": "**CPU and memory** (off by default). CPU and memory of the running chats and of the chat you're in (macOS and Linux). Choose CPU, memory or both in Process Stats below.\n\nExample: `chats: 8% 410MB chat: 3% 180MB`"
+        },
+        "claudeUsage.showLimits": {
+          "type": "boolean",
+          "default": true,
+          "order": 4,
+          "markdownDescription": "**5h and week.** Your real 5-hour and weekly usage, from Anthropic's server. Click it to fetch now; hover for when each one resets.\n\nExample: `🦄 5h: 42% week: 18% ⟳`"
         },
         "claudeUsage.showCostEstimate": {
           "type": "boolean",
