@@ -15,6 +15,8 @@
 - **macOS only for now.** It doesn't work on Windows yet (planned). Linux isn't tested.
 - **All local.** Everything is calculated on your computer from Claude Code's own logs. The only network call is to Anthropic's usage API, with the login Claude Code already saved. Nothing is sent to anyone else.
 
+**Bug or question?** [Open an issue on GitHub](https://github.com/Ola1707/claude-usage-by-chat/issues).
+
 ## What each section shows
 
 Turn each one on or off in the settings (click ⚙ at the end of the bar, then **Show …**).
@@ -75,6 +77,29 @@ Command Palette → **Claude usage: Settings**, or click `⚙`.
 - That API call goes only to Anthropic. Nothing is sent anywhere else.
 - The usage API isn't documented, so it may change or stop working.
 
+## Questions
+
+**Does an open chat start over when the 5h window resets?**
+No. `chat` and `chats` count each open chat from its first message, so a long chat keeps showing what it really costs, also after a night run. Hover them to see the part in the current 5h window. Only `5h` itself resets, because Anthropic's limit does.
+
+**Why can `chats` be above 100%?**
+It adds up the whole cost of every open chat, even the parts from earlier 5h windows. It's a cost, not how close you are to the limit right now: that's `5h`.
+
+**Why doesn't `chat` match `5h`?**
+`5h` comes from Anthropic's server and counts everything in the window, also chats you closed and Claude used elsewhere. `chat` is only the chat you're in, worked out on your computer.
+
+**How exact is the %?**
+Anthropic doesn't publish the 5h limit in tokens. The extension starts from your plan and then fits it to the server's real 5h percent (`cost est`). After you click **Update** once, the % of a chat matches the server's way of counting.
+
+**How are subagents and models counted?**
+A chat includes the subagents it starts. Each message counts at its model's API price, so a token on Opus counts more than on Sonnet, and Sonnet more than Haiku. Fast mode counts double.
+
+**What if Anthropic's server doesn't answer?**
+`5h` and `week` show `?`. `chat` and `chats` keep working from the local logs.
+
+**Something looks wrong?**
+[Open an issue](https://github.com/Ola1707/claude-usage-by-chat/issues) with a screenshot of the bar and its tooltip.
+
 ## Limitations
 
 - Doesn't work on Windows yet: `chats` and `chat` look for the chat logs in the wrong folder. Linux isn't tested.
@@ -82,6 +107,10 @@ Command Palette → **Claude usage: Settings**, or click `⚙`.
 - Two open chats with the same title: `chat` may show the other one.
 - Two VS Code windows on the same folder count each other's chats in `chats`.
 - Right after VS Code starts, `chat` can take a few seconds to show correctly.
+
+## Support
+
+Found a bug or have an idea? [Open an issue on GitHub](https://github.com/Ola1707/claude-usage-by-chat/issues).
 
 ## Develop
 
