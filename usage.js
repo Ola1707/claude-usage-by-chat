@@ -353,7 +353,7 @@ async function fetchServerUsage() {
 }
 
 // Status bar sections, in bar order, and the setting that switches each one on or off.
-const BAR_ORDER = ["limits", "chats", "chat", "cpu", "cost"];
+const BAR_ORDER = ["chat", "chats", "cpu", "limits", "cost"];
 const SHOW_SETTINGS = { limits: "showLimits", chats: "showChats", chat: "showChat", cpu: "showCpuMemory", cost: "showCostEstimate" };
 
 module.exports = { BAR_ORDER, SHOW_SETTINGS, PRICES, weights, weigh, usageSince, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, projectDir, findSessionByTitle, sessionTotals, sessionUsage, activeSessions, activeSessionFiles, activeUsage, parsePs, processSnapshot, processTree, processUsage, fetchServerUsage, PLAN_LIMITS5H, PLAN_NAMES, planKey, fetchPlan };

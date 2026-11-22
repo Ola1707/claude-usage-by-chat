@@ -1,16 +1,21 @@
 # Claude usage by chat
 
-Your Claude Code usage in the VS Code status bar: the 5-hour and weekly limits, and how much of the 5h limit each chat uses. Unofficial, not made by Anthropic.
+**See how much of your 5-hour limit each Claude Code chat uses.** Other tools show tokens or dollars. This one shows the share of your real limit: "this chat used 8% of my 5h". Also your 5h and weekly usage. Unofficial, not made by Anthropic.
+
+- **Follows the chat tab you're in**, and sums all the chats in the workspace.
+- **Calibrated against Anthropic's own 5h numbers**, so the per-chat % matches reality.
+- **Subagents included**, each weighted by its model's price: a token on Opus counts more than on Sonnet, and Sonnet more than Haiku.
 
 ![The status bar](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/bar.png)
 
-**`chats` and `chat` are % of your 5h limit.** Hover any item for details.
+**`chats` and `chat` are % of your 5h limit**, counted from each chat's first message: a 5h reset doesn't zero an open chat. Hover any item for details.
 
 - **Setup:** install it, that's all. It starts from your plan's 5h limit. When `cost est` turns yellow, click its ⟳ → **Update** to fit the limit to your real usage ([more](#cost-estimate)).
 - **Only this computer counts in `chats` and `chat`.** Claude used elsewhere (claude.ai, your phone, another computer) shows in `5h` and `week` only. If you did, click `cost est` → **Hide until the 5h reset**.
-- **Subagents count.** A chat's usage includes the subagents it starts. Each model has its own multiplier, its API price: a token on Opus counts more than on Sonnet, and Sonnet more than Haiku.
 - **macOS only for now.** It doesn't work on Windows yet (planned). Linux isn't tested.
 - **All local.** Everything is calculated on your computer from Claude Code's own logs. The only network call is to Anthropic's usage API, with the login Claude Code already saved. Nothing is sent to anyone else.
+
+**Bug or question?** [Open an issue on GitHub](https://github.com/Ola1707/claude-usage-by-chat/issues).
 
 ## What each section shows
 
@@ -18,10 +23,10 @@ Turn each one on or off in the settings (click ⚙ at the end of the bar, then *
 
 | Section | What it shows | Click |
 |---|---|---|
-| ![5h and week](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/5h-week.png) | Your real 5h and weekly usage, from Anthropic's server. Hover for when each one resets. | ⟳ fetches it now. |
-| ![chats](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chats.png) | All the chats in this workspace: their usage in the current 5h window, as % of the 5h limit. `(3)` is how many chats are open. | |
-| ![chat, small](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat-green.png)<br>![chat, bigger](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat-orange.png) | The chat you're in now, in the current 5h window. Green when small, then yellow (above 5%), orange (above 10%) and red (above 20%). Hover for the whole chat. | |
+| ![chat, small](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat-green.png)<br>![chat, bigger](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chat-orange.png) | The chat you're in now, since its first message: what it really costs, so you know when to /clear. Green when small, then yellow (above 5%), orange (above 10%) and red (above 20%). Hover for its part in the current 5h window. | |
+| ![chats](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/chats.png) | All the open chats in this workspace, each since its first message, as % of the 5h limit. `(3)` is how many chats are open. | |
 | ![CPU and memory](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/cpu-memory.png) | CPU and memory of the running chats and of the chat you're in (macOS and Linux). **Off by default:** turn on **Show Cpu Memory**. | |
+| ![5h and week](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/5h-week.png) | Your real 5h and weekly usage, from Anthropic's server. Hover for when each one resets. | ⟳ fetches it now. |
 | ![cost est](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/cost-estimate.png) | How far the 5h limit setting is from the real limit (see [Cost estimate](#cost-estimate)). | ⟳ fetches the server and offers to update the limit. |
 
 ## Install
@@ -72,6 +77,29 @@ Command Palette → **Claude usage: Settings**, or click `⚙`.
 - That API call goes only to Anthropic. Nothing is sent anywhere else.
 - The usage API isn't documented, so it may change or stop working.
 
+## Questions
+
+**Does an open chat start over when the 5h window resets?**
+No. `chat` and `chats` count each open chat from its first message, so a long chat keeps showing what it really costs, also after a night run. Hover them to see the part in the current 5h window. Only `5h` itself resets, because Anthropic's limit does.
+
+**Why can `chats` be above 100%?**
+It adds up the whole cost of every open chat, even the parts from earlier 5h windows. It's a cost, not how close you are to the limit right now: that's `5h`.
+
+**Why doesn't `chat` match `5h`?**
+`5h` comes from Anthropic's server and counts everything in the window, also chats you closed and Claude used elsewhere. `chat` is only the chat you're in, worked out on your computer.
+
+**How exact is the %?**
+Anthropic doesn't publish the 5h limit in tokens. The extension starts from your plan and then fits it to the server's real 5h percent (`cost est`). After you click **Update** once, the % of a chat matches the server's way of counting.
+
+**How are subagents and models counted?**
+A chat includes the subagents it starts. Each message counts at its model's API price, so a token on Opus counts more than on Sonnet, and Sonnet more than Haiku. Fast mode counts double.
+
+**What if Anthropic's server doesn't answer?**
+`5h` and `week` show `?`. `chat` and `chats` keep working from the local logs.
+
+**Something looks wrong?**
+[Open an issue](https://github.com/Ola1707/claude-usage-by-chat/issues) with a screenshot of the bar and its tooltip.
+
 ## Limitations
 
 - Doesn't work on Windows yet: `chats` and `chat` look for the chat logs in the wrong folder. Linux isn't tested.
@@ -79,6 +107,10 @@ Command Palette → **Claude usage: Settings**, or click `⚙`.
 - Two open chats with the same title: `chat` may show the other one.
 - Two VS Code windows on the same folder count each other's chats in `chats`.
 - Right after VS Code starts, `chat` can take a few seconds to show correctly.
+
+## Support
+
+Found a bug or have an idea? [Open an issue on GitHub](https://github.com/Ola1707/claude-usage-by-chat/issues).
 
 ## Develop
 
