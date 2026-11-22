@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.0.2
 
 - Choose which sections the status bar shows (settings **Show …**), each with an example.
 - CPU and memory is off by default (setting **Show Cpu Memory**).
