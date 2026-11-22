@@ -1,6 +1,10 @@
 # Claude usage by chat
 
-Your Claude Code usage in the VS Code status bar: the 5-hour and weekly limits, and how much of the 5h limit each chat uses. Unofficial, not made by Anthropic.
+**See how much of your 5-hour limit each Claude Code chat uses.** Other tools show tokens or dollars. This one shows the share of your real limit: "this chat used 8% of my 5h". Also your 5h and weekly usage. Unofficial, not made by Anthropic.
+
+- **Follows the chat tab you're in**, and sums all the chats in the workspace.
+- **Calibrated against Anthropic's own 5h numbers**, so the per-chat % matches reality.
+- **Subagents included**, each weighted by its model's price: a token on Opus counts more than on Sonnet, and Sonnet more than Haiku.
 
 ![The status bar](https://raw.githubusercontent.com/Ola1707/claude-usage-by-chat/main/images/bar.png)
 
@@ -8,7 +12,6 @@ Your Claude Code usage in the VS Code status bar: the 5-hour and weekly limits, 
 
 - **Setup:** install it, that's all. It starts from your plan's 5h limit. When `cost est` turns yellow, click its ⟳ → **Update** to fit the limit to your real usage ([more](#cost-estimate)).
 - **Only this computer counts in `chats` and `chat`.** Claude used elsewhere (claude.ai, your phone, another computer) shows in `5h` and `week` only. If you did, click `cost est` → **Hide until the 5h reset**.
-- **Subagents count.** A chat's usage includes the subagents it starts. Each model has its own multiplier, its API price: a token on Opus counts more than on Sonnet, and Sonnet more than Haiku.
 - **macOS only for now.** It doesn't work on Windows yet (planned). Linux isn't tested.
 - **All local.** Everything is calculated on your computer from Claude Code's own logs. The only network call is to Anthropic's usage API, with the login Claude Code already saved. Nothing is sent to anyone else.
 

@@ -1,7 +1,7 @@
 {
   "name": "claude-usage-by-chat",
   "displayName": "Claude usage by chat (unofficial)",
-  "description": "Claude Code usage in the status bar: 5h and weekly limits, and how much each chat uses. Unofficial, not made by Anthropic.",
+  "description": "How much of your Claude Code 5-hour limit each chat uses, live in the status bar. Follows the chat tab you're in, calibrated against Anthropic's real usage. Unofficial.",
   "version": "0.0.2",
   "publisher": "uniolik",
   "license": "MIT",
@@ -20,8 +20,15 @@
     "claude",
     "claude code",
     "usage",
+    "5 hour limit",
+    "rate limit",
+    "quota",
+    "per chat",
+    "session",
     "status bar",
-    "tokens"
+    "tokens",
+    "anthropic",
+    "subagents"
   ],
   "engines": {
     "vscode": "^1.80.0"

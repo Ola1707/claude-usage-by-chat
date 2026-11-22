@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Clearer description and README start: how much of your 5h limit each chat uses, what sets it apart.
+- More search keywords.
+
 ## 0.0.2
 
 - Choose which sections the status bar shows (settings **Show …**), each with an example.
