@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `chat` and `chats` count each open chat from its first message, so a 5h reset no longer zeroes them. The tooltip shows the part in the current 5h window.
 - Clearer description and README start: how much of your 5h limit each chat uses, what sets it apart.
 - More search keywords.
 

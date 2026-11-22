@@ -118,10 +118,8 @@ function activate(context) {
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
   // still-running chats of this workspace
   const chatsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0001);
-  chatsItem.tooltip = "Still-running chats of this workspace in the current 5h window, as % of the 5h limit (count)";
   // the focused chat in its own item, so only its text gets colored
   const chatItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0002);
-  chatItem.tooltip = "Focused chat in the current 5h window, as % of the 5h limit";
   // CPU and memory of the still-running chats' processes, and of the focused chat's process
   const procItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.0003);
   // cost estimate (see COST_LABEL) with its update icon in the same item, so they sit together;
@@ -193,7 +191,8 @@ function activate(context) {
 
   // the focused chat is local only (no server call), so it has its own, faster timer
   const refreshChat = () => {
-    // chat in the focused editor tab, as % of the 5h limit (like `usage.py <file>`)
+    // chat in the focused editor tab: the whole chat since its first message, as % of the 5h limit (like `usage.py <file>`).
+    // Not reset at the 5h reset, so a long chat keeps showing what it really costs (when to /clear).
     // always shown: "?" means no chat tab matched (see the tooltip for what the active tab reports)
     let chat = "chat: ?", color;
     try {
@@ -201,11 +200,11 @@ function activate(context) {
       if (file) {
         const limit = configuredLimit5h().limit;
         const { total, recent } = sessionTotals(file, windowStart5h());
-        const percent = (recent / limit) * 100;
+        const percent = (total / limit) * 100;
         chat = `chat: ${percent.toFixed(1)}%`;
-        // the whole chat too, as it may have begun in an earlier window
-        chatItem.tooltip = `Focused chat in the current 5h window, as % of the 5h limit\n` +
-          `Whole chat: ${((total / limit) * 100).toFixed(1)}%`;
+        // its part in the current 5h window too, as it may have begun in an earlier window
+        chatItem.tooltip = `Focused chat since its first message, as % of the 5h limit (not reset at the 5h reset)\n` +
+          `In the current 5h window: ${((recent / limit) * 100).toFixed(1)}%`;
         color = percent > 20 ? "charts.red" : percent > 10 ? "charts.orange" : percent > 5 ? "charts.yellow" : "charts.green";
       }
     } catch { /* keep "?" */ }
@@ -251,13 +250,17 @@ function activate(context) {
     const tab = vscode.window.tabGroups.activeTabGroup.activeTab;
     const tabInfo = `\nActive tab: "${tab?.label}" (${tab?.input?.viewType || tab?.input?.constructor?.name || "none"})`;
     debugDump({ tabs: vscode.window.tabGroups.all.flatMap((g) => g.tabs.map((t) => ({ label: t.label, active: t.isActive, groupActive: g.isActive, viewType: t.input?.viewType, kind: t.input?.constructor?.name }))), chat });
-    // still-running chats of this window's workspace summed, as % of the 5h limit, with their count
+    // still-running chats of this window's workspace summed, each since its first message, as % of the 5h limit, with their count
     // (no folder open: leave the chats part out rather than show every window's chats)
     try {
       const folders = vscode.workspace.workspaceFolders;
       if (!folders) throw new Error("no workspace folder");
-      const { count, total } = activeUsage(folders.map((f) => f.uri.fsPath), windowStart5h());
-      chats = `chats: ${((total / configuredLimit5h().limit) * 100).toFixed(1)}% (${count})`;
+      const cwds = folders.map((f) => f.uri.fsPath), limit = configuredLimit5h().limit;
+      const { count, total } = activeUsage(cwds, 0);
+      const inWindow = activeUsage(cwds, windowStart5h()).total;
+      chats = `chats: ${((total / limit) * 100).toFixed(1)}% (${count})`;
+      chatsItem.tooltip = `Still-running chats of this workspace (${count}), each since its first message, as % of the 5h limit ` +
+        `(not reset at the 5h reset)\nIn the current 5h window: ${((inWindow / limit) * 100).toFixed(1)}%`;
     } catch { /* leave the chats part out */ }
     setText("chats", chats);
     try {
