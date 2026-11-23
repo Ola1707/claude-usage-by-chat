@@ -165,19 +165,18 @@ function projectDir(cwd, root = path.join(os.homedir(), ".claude", "projects")) 
 }
 
 /**
- * Session file whose (last) ai-title equals `title`, or undefined. Titles are what the chat tab shows.
- * Looks only at `only` (session files) when given, else at every session file in `dir`. When several
- * match (same title), the most recently modified wins; an exact match beats a "…"-truncated prefix match.
+ * Session files whose (last) ai-title equals `title`. Titles are what the chat tab shows. Looks only at
+ * `only` (session files) when given, else at every session file in `dir`. Exact matches beat
+ * "…"-truncated prefix matches: several results mean the tab title alone can't tell which chat it is.
  */
-function findSessionByTitle(title, dir, only) {
+function findSessionsByTitle(title, dir, only) {
   let files = only;
   if (!files) {
     let names;
-    try { names = fs.readdirSync(dir); } catch { return; }
+    try { names = fs.readdirSync(dir); } catch { return []; }
     files = names.filter((n) => n.endsWith(".jsonl")).map((n) => path.join(dir, n));
   }
-  const newest = (a, b) => (!a || fs.statSync(b).mtimeMs > fs.statSync(a).mtimeMs ? b : a);
-  let exact, prefix;
+  const exact = [], prefix = [];
   for (const file of files) {
     let last;
     try {
@@ -186,11 +185,17 @@ function findSessionByTitle(title, dir, only) {
         try { const e = JSON.parse(line); if (e.type === "ai-title") last = e.aiTitle; } catch { /* skip */ }
       }
     } catch { continue; }
-    if (last === title) exact = newest(exact, file);
+    if (last === title) exact.push(file);
     // tab labels are truncated with "…"
-    else if (last && title.endsWith("…") && last.startsWith(title.slice(0, -1))) prefix = newest(prefix, file);
+    else if (last && title.endsWith("…") && last.startsWith(title.slice(0, -1))) prefix.push(file);
   }
-  return exact || prefix;
+  return exact.length ? exact : prefix;
+}
+
+/** The one session file for a tab title (see findSessionsByTitle): the most recently modified when several match. */
+function findSessionByTitle(title, dir, only) {
+  const mtime = (f) => fs.statSync(f).mtimeMs;
+  return findSessionsByTitle(title, dir, only).reduce((a, b) => (!a || mtime(b) > mtime(a) ? b : a), undefined);
 }
 
 /**
@@ -356,4 +361,4 @@ async function fetchServerUsage() {
 const BAR_ORDER = ["chat", "chats", "cpu", "limits", "cost"];
 const SHOW_SETTINGS = { limits: "showLimits", chats: "showChats", chat: "showChat", cpu: "showCpuMemory", cost: "showCostEstimate" };
 
-module.exports = { BAR_ORDER, SHOW_SETTINGS, PRICES, weights, weigh, usageSince, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, projectDir, findSessionByTitle, sessionTotals, sessionUsage, activeSessions, activeSessionFiles, activeUsage, parsePs, processSnapshot, processTree, processUsage, fetchServerUsage, PLAN_LIMITS5H, PLAN_NAMES, planKey, fetchPlan };
+module.exports = { BAR_ORDER, SHOW_SETTINGS, PRICES, weights, weigh, usageSince, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, projectDir, findSessionsByTitle, findSessionByTitle, sessionTotals, sessionUsage, activeSessions, activeSessionFiles, activeUsage, parsePs, processSnapshot, processTree, processUsage, fetchServerUsage, PLAN_LIMITS5H, PLAN_NAMES, planKey, fetchPlan };

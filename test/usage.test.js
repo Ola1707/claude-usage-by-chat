@@ -2,7 +2,7 @@ const assert = require("assert");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { weights, weigh, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, planKey, PLAN_LIMITS5H, sessionTotals, sessionUsage, findSessionByTitle, projectDir, activeUsage, activeSessions, parsePs, processTree, processUsage } = require("../usage");
+const { weights, weigh, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, planKey, PLAN_LIMITS5H, sessionTotals, sessionUsage, findSessionsByTitle, findSessionByTitle, projectDir, activeUsage, activeSessions, parsePs, processTree, processUsage } = require("../usage");
 
 assert.strictEqual(
   weigh({ input_tokens: 10, output_tokens: 2, cache_creation_input_tokens: 4, cache_read_input_tokens: 100 }),
@@ -110,6 +110,14 @@ fs.utimesSync(sess, new Date(Date.now() - 60000), new Date(Date.now() - 60000));
 assert.strictEqual(findSessionByTitle("My chat", path.join(root, "proj")), dup);
 assert.strictEqual(findSessionByTitle("My chat", path.join(root, "proj"), [sess]), sess);
 fs.unlinkSync(dup);
+// two titles that the tab truncates to the same label: both match, so the tab can't tell them apart
+const t1 = path.join(root, "proj", "t1.jsonl"), t2 = path.join(root, "proj", "t2.jsonl");
+fs.writeFileSync(t1, JSON.stringify({ type: "ai-title", aiTitle: "Nightshift start-review e2e fixes" }));
+fs.writeFileSync(t2, JSON.stringify({ type: "ai-title", aiTitle: "Nightshift start-review command" }));
+assert.deepStrictEqual(findSessionsByTitle("Nightshift start-review …", path.join(root, "proj"), [t1, t2]), [t1, t2]);
+assert.deepStrictEqual(findSessionsByTitle("Nightshift start-review command", path.join(root, "proj"), [t1, t2]), [t2]);
+fs.unlinkSync(t1);
+fs.unlinkSync(t2);
 
 assert.strictEqual(projectDir("/Users/me/Repos/my.app", "/r"), "/r/-Users-me-Repos-my-app");
 
