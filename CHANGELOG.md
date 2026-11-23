@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.0.5
 
 - Fix: each chat tab shows its own chat, also after a window reload, from the chat id VS Code saves with each tab. Chats are never matched by title any more (titles are not unique: "Nightshift start-review …" showed another chat's percent). A tab VS Code has not saved yet shows `chat: ?` for a short while.
 
