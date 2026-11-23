@@ -165,37 +165,51 @@ function projectDir(cwd, root = path.join(os.homedir(), ".claude", "projects")) 
 }
 
 /**
- * Session files whose (last) ai-title equals `title`. Titles are what the chat tab shows. Looks only at
- * `only` (session files) when given, else at every session file in `dir`. Exact matches beat
- * "…"-truncated prefix matches: several results mean the tab title alone can't tell which chat it is.
+ * The editor tabs VS Code saved for this workspace (the value of `memento/workbench.parts.editor` in its
+ * state.vscdb), per editor group in tab order: { title, sessionId } for a Claude chat tab, {} for any other tab.
+ * VS Code saves each chat tab's session id there, so this tells two tabs with the same title apart.
  */
-function findSessionsByTitle(title, dir, only) {
-  let files = only;
-  if (!files) {
-    let names;
-    try { names = fs.readdirSync(dir); } catch { return []; }
-    files = names.filter((n) => n.endsWith(".jsonl")).map((n) => path.join(dir, n));
-  }
-  const exact = [], prefix = [];
-  for (const file of files) {
-    let last;
-    try {
-      for (const line of fs.readFileSync(file, "utf8").split("\n")) {
-        if (!line.includes('"ai-title"')) continue;
-        try { const e = JSON.parse(line); if (e.type === "ai-title") last = e.aiTitle; } catch { /* skip */ }
-      }
-    } catch { continue; }
-    if (last === title) exact.push(file);
-    // tab labels are truncated with "…"
-    else if (last && title.endsWith("…") && last.startsWith(title.slice(0, -1))) prefix.push(file);
-  }
-  return exact.length ? exact : prefix;
+function savedEditorGroups(json) {
+  const groups = [];
+  const walk = (node) => {
+    if (!node) return;
+    if (node.type === "leaf") {
+      groups.push((node.data.editors || []).map((e) => {
+        if (e.id !== "workbench.editors.webviewInput") return {};
+        try {
+          const v = JSON.parse(e.value);
+          if (!/claudeVSCodePanel$/.test(v.viewType || "")) return {};
+          return { title: v.title, sessionId: JSON.parse(v.state || "{}").sessionID };
+        } catch { return {}; }
+      }));
+    } else (node.data || []).forEach(walk);
+  };
+  try { walk(JSON.parse(json)["editorpart.state"].serializedGrid.root); } catch { /* no saved tabs */ }
+  return groups;
 }
 
-/** The one session file for a tab title (see findSessionsByTitle): the most recently modified when several match. */
-function findSessionByTitle(title, dir, only) {
-  const mtime = (f) => fs.statSync(f).mtimeMs;
-  return findSessionsByTitle(title, dir, only).reduce((a, b) => (!a || mtime(b) > mtime(a) ? b : a), undefined);
+/** The saved editor layout of a workspace, read from `<workspaceStorage dir>/state.vscdb` (sqlite3 ships with macOS). */
+function readSavedEditors(workspaceStorageDir) {
+  return new Promise((resolve) => require("child_process").execFile("sqlite3",
+    ["-readonly", path.join(workspaceStorageDir, "state.vscdb"), "select value from ItemTable where key='memento/workbench.parts.editor'"],
+    { maxBuffer: 16 * 1024 * 1024 }, (err, out) => resolve(err ? [] : savedEditorGroups(out))));
+}
+
+/**
+ * Session file of the focused chat tab, or undefined. NEVER by the chat's title: titles are not unique
+ * (VS Code truncates long ones with "…", and chats get the same title), so a title match shows another chat's number.
+ * `tab` = { index, labels } (its position and the labels of all tabs in its group, in order), `saved` = savedEditorGroups.
+ * The tab's own session id from the saved tabs, when exactly one saved group has the same tabs in the same order
+ * (the labels only check that the saved layout is this one). VS Code saves them every so often, so a just-opened
+ * tab may be missing: undefined, and the status bar shows "?".
+ */
+function chatFileForTab(tab, dir, saved = []) {
+  const fits = saved.filter((g) => g.length === tab.labels.length &&
+    g.every((e, i) => e.title === undefined || e.title === tab.labels[i]));
+  const ids = [...new Set(fits.map((g) => g[tab.index].sessionId))];
+  if (ids.length !== 1 || !ids[0]) return;
+  const file = path.join(dir, `${ids[0]}.jsonl`);
+  return fs.existsSync(file) ? file : undefined;
 }
 
 /**
@@ -361,4 +375,4 @@ async function fetchServerUsage() {
 const BAR_ORDER = ["chat", "chats", "cpu", "limits", "cost"];
 const SHOW_SETTINGS = { limits: "showLimits", chats: "showChats", chat: "showChat", cpu: "showCpuMemory", cost: "showCostEstimate" };
 
-module.exports = { BAR_ORDER, SHOW_SETTINGS, PRICES, weights, weigh, usageSince, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, projectDir, findSessionsByTitle, findSessionByTitle, sessionTotals, sessionUsage, activeSessions, activeSessionFiles, activeUsage, parsePs, processSnapshot, processTree, processUsage, fetchServerUsage, PLAN_LIMITS5H, PLAN_NAMES, planKey, fetchPlan };
+module.exports = { BAR_ORDER, SHOW_SETTINGS, PRICES, weights, weigh, usageSince, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, projectDir, savedEditorGroups, readSavedEditors, chatFileForTab, sessionTotals, sessionUsage, activeSessions, activeSessionFiles, activeUsage, parsePs, processSnapshot, processTree, processUsage, fetchServerUsage, PLAN_LIMITS5H, PLAN_NAMES, planKey, fetchPlan };
