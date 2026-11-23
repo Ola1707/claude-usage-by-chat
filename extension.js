@@ -216,7 +216,7 @@ function activate(context) {
         color = percent > 20 ? "charts.red" : percent > 10 ? "charts.orange" : percent > 5 ? "charts.yellow" : "charts.green";
       } else if (ambiguousTitle) {
         chatItem.tooltip = `${ambiguousTitle.count} open chats have the tab title "${ambiguousTitle.title}", ` +
-          "so this chat can't be told apart from the others. Rename the chat tab to see its usage.";
+          "so the extension can't tell which of them this tab is.";
       }
     } catch { /* keep "?" */ }
     setText("chat", chat);
