@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix: two chat tabs with the same shortened title (e.g. "Nightshift start-review …") now each show their own chat, also after a window reload, from the chat id VS Code saves with each tab. When that is not saved yet, `chat` shows `?` instead of another chat's percent.
+
 ## 0.0.4
 
 - Fix: a new chat no longer shows another open chat's `chat` percent when VS Code shortens both tab titles to the same text (e.g. "Nightshift start-review …"). It shows `chat: ?`, and the tooltip explains why.

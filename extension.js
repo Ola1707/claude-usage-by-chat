@@ -1,22 +1,18 @@
 const vscode = require("vscode");
-const { projectDir, findSessionsByTitle, findSessionByTitle, sessionTotals, activeUsage, activeSessions, activeSessionFiles, fetchServerUsage, addCalibrationReading, excludeWindow, sameWindow,
+const { projectDir, chatFileForTab, readSavedEditors, sessionTotals, activeUsage, activeSessions, activeSessionFiles, fetchServerUsage, addCalibrationReading, excludeWindow, sameWindow,
   fetchPlan, PLAN_LIMITS5H, PLAN_NAMES, processSnapshot, processTree, processUsage, BAR_ORDER, SHOW_SETTINGS } = require("./usage");
 
-// The chat tab's title is the session's ai-title. Keep the last chat seen, so
-// focusing a non-chat tab (or the sidebar chat, which is not a tab) keeps the value.
-// ambiguousTitle: the focused tab's title fits several open chats (VS Code truncates long titles with "…"),
-// so it shows "?" rather than another chat's number.
-let lastChatFile, ambiguousTitle;
+// Which chat the focused tab shows: see chatFileForTab. Keep the last chat seen, so focusing a non-chat tab
+// (or the sidebar chat, which is not a tab) keeps the value. ambiguousTitle: several chats fit the tab, so "?".
+let lastChatFile, ambiguousTitle, savedEditors = [];
 function focusedChatFile() {
-  const tab = vscode.window.tabGroups.activeTabGroup.activeTab;
+  const group = vscode.window.tabGroups.activeTabGroup, tab = group.activeTab;
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (tab && folder && /claudeVSCodePanel$/.test(tab.input?.viewType || "")) {
-    // match the title among the open chats first, so older chats do not compete; all chats only as a fallback
-    const dir = projectDir(folder.uri.fsPath);
-    const open = findSessionsByTitle(tab.label, dir, activeSessionFiles([folder.uri.fsPath]));
-    ambiguousTitle = open.length > 1 ? { title: tab.label, count: open.length } : undefined;
-    if (ambiguousTitle) lastChatFile = undefined;
-    else lastChatFile = open[0] || findSessionByTitle(tab.label, dir) || lastChatFile;
+    const found = chatFileForTab({ label: tab.label, index: group.tabs.indexOf(tab), labels: group.tabs.map((t) => t.label) },
+      projectDir(folder.uri.fsPath), savedEditors, activeSessionFiles([folder.uri.fsPath]));
+    ambiguousTitle = found.ambiguous ? { title: tab.label, count: found.ambiguous } : undefined;
+    if (found.file || found.ambiguous) lastChatFile = found.file;
   }
   return lastChatFile;
 }
@@ -215,7 +211,7 @@ function activate(context) {
           `In the current 5h window: ${((recent / limit) * 100).toFixed(1)}%`;
         color = percent > 20 ? "charts.red" : percent > 10 ? "charts.orange" : percent > 5 ? "charts.yellow" : "charts.green";
       } else if (ambiguousTitle) {
-        chatItem.tooltip = `${ambiguousTitle.count} open chats have the tab title "${ambiguousTitle.title}", ` +
+        chatItem.tooltip = `${ambiguousTitle.count} chats have the tab title "${ambiguousTitle.title}", ` +
           "so the extension can't tell which of them this tab is.";
       }
     } catch { /* keep "?" */ }
@@ -254,7 +250,12 @@ function activate(context) {
     } catch { setText("cpu", ""); }
   };
 
+  // the workspace's saved tabs (with each chat tab's session id) are in the parent of this extension's storage folder
+  const updateSavedEditors = async () => {
+    if (context.storageUri) savedEditors = await readSavedEditors(require("path").dirname(context.storageUri.fsPath));
+  };
   const refresh = async (force = false) => {
+    await updateSavedEditors();
     const chat = refreshChat();
     refreshProc();
     let chats = "";

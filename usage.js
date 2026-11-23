@@ -199,6 +199,62 @@ function findSessionByTitle(title, dir, only) {
 }
 
 /**
+ * The editor tabs VS Code saved for this workspace (the value of `memento/workbench.parts.editor` in its
+ * state.vscdb), per editor group in tab order: { title, sessionId } for a Claude chat tab, {} for any other tab.
+ * VS Code saves each chat tab's session id there, so this tells two tabs with the same title apart.
+ */
+function savedEditorGroups(json) {
+  const groups = [];
+  const walk = (node) => {
+    if (!node) return;
+    if (node.type === "leaf") {
+      groups.push((node.data.editors || []).map((e) => {
+        if (e.id !== "workbench.editors.webviewInput") return {};
+        try {
+          const v = JSON.parse(e.value);
+          if (!/claudeVSCodePanel$/.test(v.viewType || "")) return {};
+          return { title: v.title, sessionId: JSON.parse(v.state || "{}").sessionID };
+        } catch { return {}; }
+      }));
+    } else (node.data || []).forEach(walk);
+  };
+  try { walk(JSON.parse(json)["editorpart.state"].serializedGrid.root); } catch { /* no saved tabs */ }
+  return groups;
+}
+
+/** The saved editor layout of a workspace, read from `<workspaceStorage dir>/state.vscdb` (sqlite3 ships with macOS). */
+function readSavedEditors(workspaceStorageDir) {
+  return new Promise((resolve) => require("child_process").execFile("sqlite3",
+    ["-readonly", path.join(workspaceStorageDir, "state.vscdb"), "select value from ItemTable where key='memento/workbench.parts.editor'"],
+    { maxBuffer: 16 * 1024 * 1024 }, (err, out) => resolve(err ? [] : savedEditorGroups(out))));
+}
+
+/**
+ * Session file of the focused chat tab, as { file } or { ambiguous: n }.
+ * `tab` = { label, index, labels } (its title, its position, and the titles of all tabs in its group, in order),
+ * `saved` = savedEditorGroups, `open` = session files of still-running chats.
+ * 1. The saved tabs, when a saved group has the same tabs in the same order: the tab's own session id.
+ *    (VS Code saves them every so often, so a just-opened tab may be missing: then step 2.)
+ * 2. The title among the still-running chats, then among all chats. Several chats with that title
+ *    (VS Code truncates long titles with "…"): ambiguous, rather than another chat's number.
+ */
+function chatFileForTab(tab, dir, saved = [], open = []) {
+  const fits = saved.filter((g) => g.length === tab.labels.length &&
+    g.every((e, i) => e.title === undefined || e.title === tab.labels[i]));
+  const ids = [...new Set(fits.map((g) => g[tab.index].sessionId))];
+  if (ids.length === 1 && ids[0]) {
+    const file = path.join(dir, `${ids[0]}.jsonl`);
+    if (fs.existsSync(file)) return { file };
+  }
+  for (const files of [open, undefined]) {
+    const found = findSessionsByTitle(tab.label, dir, files);
+    if (found.length > 1) return { ambiguous: found.length };
+    if (found.length === 1) return { file: found[0] };
+  }
+  return {};
+}
+
+/**
  * Weighted tokens of one session file incl. its subagents (like `usage.py <file>`), in one read:
  * `total` of the whole chat, and `recent` from messages newer than `since` (ms epoch), so a chat that
  * began before the 5h window counts only its part in the window.
@@ -361,4 +417,4 @@ async function fetchServerUsage() {
 const BAR_ORDER = ["chat", "chats", "cpu", "limits", "cost"];
 const SHOW_SETTINGS = { limits: "showLimits", chats: "showChats", chat: "showChat", cpu: "showCpuMemory", cost: "showCostEstimate" };
 
-module.exports = { BAR_ORDER, SHOW_SETTINGS, PRICES, weights, weigh, usageSince, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, projectDir, findSessionsByTitle, findSessionByTitle, sessionTotals, sessionUsage, activeSessions, activeSessionFiles, activeUsage, parsePs, processSnapshot, processTree, processUsage, fetchServerUsage, PLAN_LIMITS5H, PLAN_NAMES, planKey, fetchPlan };
+module.exports = { BAR_ORDER, SHOW_SETTINGS, PRICES, weights, weigh, usageSince, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, projectDir, findSessionsByTitle, findSessionByTitle, savedEditorGroups, readSavedEditors, chatFileForTab, sessionTotals, sessionUsage, activeSessions, activeSessionFiles, activeUsage, parsePs, processSnapshot, processTree, processUsage, fetchServerUsage, PLAN_LIMITS5H, PLAN_NAMES, planKey, fetchPlan };

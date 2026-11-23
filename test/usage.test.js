@@ -2,7 +2,7 @@ const assert = require("assert");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { weights, weigh, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, planKey, PLAN_LIMITS5H, sessionTotals, sessionUsage, findSessionsByTitle, findSessionByTitle, projectDir, activeUsage, activeSessions, parsePs, processTree, processUsage } = require("../usage");
+const { weights, weigh, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, planKey, PLAN_LIMITS5H, sessionTotals, sessionUsage, findSessionsByTitle, findSessionByTitle, savedEditorGroups, chatFileForTab, projectDir, activeUsage, activeSessions, parsePs, processTree, processUsage } = require("../usage");
 
 assert.strictEqual(
   weigh({ input_tokens: 10, output_tokens: 2, cache_creation_input_tokens: 4, cache_read_input_tokens: 100 }),
@@ -118,6 +118,34 @@ assert.deepStrictEqual(findSessionsByTitle("Nightshift start-review …", path.j
 assert.deepStrictEqual(findSessionsByTitle("Nightshift start-review command", path.join(root, "proj"), [t1, t2]), [t2]);
 fs.unlinkSync(t1);
 fs.unlinkSync(t2);
+
+// The bug: two closed chats whose titles VS Code truncates to the same tab label. The old chat
+// ("e2e fixes", big) showed the new chat's number, as the newest file with that title won.
+{
+  const d = path.join(root, "tabs");
+  fs.mkdirSync(d);
+  const chat = (id, title) => fs.writeFileSync(path.join(d, `${id}.jsonl`), JSON.stringify({ type: "ai-title", aiTitle: title }));
+  chat("old-e2e", "Nightshift start-review e2e fixes");
+  chat("new-cmd", "Nightshift start-review command");
+  chat("other", "Keep screen awake");
+  const webview = (title, sessionID) => ({ id: "workbench.editors.webviewInput", value: JSON.stringify({
+    viewType: "mainThreadWebview-claudeVSCodePanel", title, state: JSON.stringify({ isFullEditor: false, sessionID }) }) });
+  const state = JSON.stringify({ "editorpart.state": { serializedGrid: { root: { type: "branch", data: [{ type: "leaf", data: { editors: [
+    webview("Nightshift start-review …", "old-e2e"), webview("Nightshift start-review …", "new-cmd"),
+    { id: "workbench.editors.files.fileEditorInput", value: "{}" }, webview("Keep screen awake", "other")] } }] } } } });
+  const saved = savedEditorGroups(state);
+  assert.deepStrictEqual(saved[0][1], { title: "Nightshift start-review …", sessionId: "new-cmd" });
+  const labels = ["Nightshift start-review …", "Nightshift start-review …", "usage.js", "Keep screen awake"];
+  const tab = (index) => ({ label: labels[index], index, labels });
+  // each tab finds its own chat by the saved session id
+  assert.deepStrictEqual(chatFileForTab(tab(0), d, saved), { file: path.join(d, "old-e2e.jsonl") });
+  assert.deepStrictEqual(chatFileForTab(tab(1), d, saved), { file: path.join(d, "new-cmd.jsonl") });
+  // no saved tabs (or they don't fit the open ones, e.g. a just-opened tab): never another chat's number
+  assert.deepStrictEqual(chatFileForTab(tab(0), d), { ambiguous: 2 });
+  assert.deepStrictEqual(chatFileForTab({ ...tab(0), labels: [...labels, "New tab"] }, d, saved), { ambiguous: 2 });
+  // a title only one chat has still works without the saved tabs
+  assert.deepStrictEqual(chatFileForTab(tab(3), d), { file: path.join(d, "other.jsonl") });
+}
 
 assert.strictEqual(projectDir("/Users/me/Repos/my.app", "/r"), "/r/-Users-me-Repos-my-app");
 
