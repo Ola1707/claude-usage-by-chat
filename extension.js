@@ -1,18 +1,22 @@
 const vscode = require("vscode");
-const { projectDir, findSessionByTitle, sessionTotals, activeUsage, activeSessions, activeSessionFiles, fetchServerUsage, addCalibrationReading, excludeWindow, sameWindow,
+const { projectDir, findSessionsByTitle, findSessionByTitle, sessionTotals, activeUsage, activeSessions, activeSessionFiles, fetchServerUsage, addCalibrationReading, excludeWindow, sameWindow,
   fetchPlan, PLAN_LIMITS5H, PLAN_NAMES, processSnapshot, processTree, processUsage, BAR_ORDER, SHOW_SETTINGS } = require("./usage");
 
 // The chat tab's title is the session's ai-title. Keep the last chat seen, so
 // focusing a non-chat tab (or the sidebar chat, which is not a tab) keeps the value.
-let lastChatFile;
+// ambiguousTitle: the focused tab's title fits several open chats (VS Code truncates long titles with "…"),
+// so it shows "?" rather than another chat's number.
+let lastChatFile, ambiguousTitle;
 function focusedChatFile() {
   const tab = vscode.window.tabGroups.activeTabGroup.activeTab;
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (tab && folder && /claudeVSCodePanel$/.test(tab.input?.viewType || "")) {
     // match the title among the open chats first, so older chats do not compete; all chats only as a fallback
     const dir = projectDir(folder.uri.fsPath);
-    lastChatFile = findSessionByTitle(tab.label, dir, activeSessionFiles([folder.uri.fsPath])) ||
-      findSessionByTitle(tab.label, dir) || lastChatFile;
+    const open = findSessionsByTitle(tab.label, dir, activeSessionFiles([folder.uri.fsPath]));
+    ambiguousTitle = open.length > 1 ? { title: tab.label, count: open.length } : undefined;
+    if (ambiguousTitle) lastChatFile = undefined;
+    else lastChatFile = open[0] || findSessionByTitle(tab.label, dir) || lastChatFile;
   }
   return lastChatFile;
 }
@@ -198,6 +202,7 @@ function activate(context) {
     // Not reset at the 5h reset, so a long chat keeps showing what it really costs (when to /clear).
     // always shown: "?" means no chat tab matched (see the tooltip for what the active tab reports)
     let chat = "chat: ?", color;
+    chatItem.tooltip = undefined;
     try {
       const file = focusedChatFile();
       if (file) {
@@ -209,6 +214,9 @@ function activate(context) {
         chatItem.tooltip = `Focused chat since its first message, as % of the 5h limit (not reset at the 5h reset)\n` +
           `In the current 5h window: ${((recent / limit) * 100).toFixed(1)}%`;
         color = percent > 20 ? "charts.red" : percent > 10 ? "charts.orange" : percent > 5 ? "charts.yellow" : "charts.green";
+      } else if (ambiguousTitle) {
+        chatItem.tooltip = `${ambiguousTitle.count} open chats have the tab title "${ambiguousTitle.title}", ` +
+          "so the extension can't tell which of them this tab is.";
       }
     } catch { /* keep "?" */ }
     setText("chat", chat);

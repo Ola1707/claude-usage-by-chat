@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.4
+
+- Fix: a new chat no longer shows another open chat's `chat` percent when VS Code shortens both tab titles to the same text (e.g. "Nightshift start-review …"). It shows `chat: ?`, and the tooltip explains why.
+
 ## 0.0.3
 
 - New order in the status bar: 🦄 `chat`, `chats`, then `5h`/`week`, then `cost est`. The 🦄 leads the first section shown.

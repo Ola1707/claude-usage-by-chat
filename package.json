@@ -2,7 +2,7 @@
   "name": "claude-usage-by-chat",
   "displayName": "Claude usage by chat (unofficial)",
   "description": "How much of your Claude Code 5-hour limit each chat uses, live in the status bar. Follows the chat tab you're in, calibrated against Anthropic's real usage. Unofficial.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "uniolik",
   "license": "MIT",
   "icon": "icon.png",
