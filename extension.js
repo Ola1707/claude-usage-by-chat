@@ -2,17 +2,17 @@ const vscode = require("vscode");
 const { projectDir, chatFileForTab, readSavedEditors, sessionTotals, activeUsage, activeSessions, activeSessionFiles, fetchServerUsage, addCalibrationReading, excludeWindow, sameWindow,
   fetchPlan, PLAN_LIMITS5H, PLAN_NAMES, processSnapshot, processTree, processUsage, BAR_ORDER, SHOW_SETTINGS } = require("./usage");
 
-// Which chat the focused tab shows: see chatFileForTab. Keep the last chat seen, so focusing a non-chat tab
-// (or the sidebar chat, which is not a tab) keeps the value. ambiguousTitle: several chats fit the tab, so "?".
-let lastChatFile, ambiguousTitle, savedEditors = [];
+// Which chat the focused tab shows: its own session id from VS Code's saved tabs (chatFileForTab), never its title.
+// Keep the last chat seen, so focusing a non-chat tab (or the sidebar chat, which is not a tab) keeps the value.
+// unknownTab: a chat tab with no saved session id yet, so "?".
+let lastChatFile, unknownTab, savedEditors = [];
 function focusedChatFile() {
   const group = vscode.window.tabGroups.activeTabGroup, tab = group.activeTab;
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (tab && folder && /claudeVSCodePanel$/.test(tab.input?.viewType || "")) {
-    const found = chatFileForTab({ label: tab.label, index: group.tabs.indexOf(tab), labels: group.tabs.map((t) => t.label) },
-      projectDir(folder.uri.fsPath), savedEditors, activeSessionFiles([folder.uri.fsPath]));
-    ambiguousTitle = found.ambiguous ? { title: tab.label, count: found.ambiguous } : undefined;
-    if (found.file || found.ambiguous) lastChatFile = found.file;
+    lastChatFile = chatFileForTab({ index: group.tabs.indexOf(tab), labels: group.tabs.map((t) => t.label) },
+      projectDir(folder.uri.fsPath), savedEditors);
+    unknownTab = !lastChatFile;
   }
   return lastChatFile;
 }
@@ -210,9 +210,8 @@ function activate(context) {
         chatItem.tooltip = `Focused chat since its first message, as % of the 5h limit (not reset at the 5h reset)\n` +
           `In the current 5h window: ${((recent / limit) * 100).toFixed(1)}%`;
         color = percent > 20 ? "charts.red" : percent > 10 ? "charts.orange" : percent > 5 ? "charts.yellow" : "charts.green";
-      } else if (ambiguousTitle) {
-        chatItem.tooltip = `${ambiguousTitle.count} chats have the tab title "${ambiguousTitle.title}", ` +
-          "so the extension can't tell which of them this tab is.";
+      } else if (unknownTab) {
+        chatItem.tooltip = "VS Code has not saved this chat tab yet (it does every so often), so its chat is not known yet.";
       }
     } catch { /* keep "?" */ }
     setText("chat", chat);

@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Fix: two chat tabs with the same shortened title (e.g. "Nightshift start-review …") now each show their own chat, also after a window reload, from the chat id VS Code saves with each tab. When that is not saved yet, `chat` shows `?` instead of another chat's percent.
+- Fix: each chat tab shows its own chat, also after a window reload, from the chat id VS Code saves with each tab. Chats are never matched by title any more (titles are not unique: "Nightshift start-review …" showed another chat's percent). A tab VS Code has not saved yet shows `chat: ?` for a short while.
 
 ## 0.0.4
 

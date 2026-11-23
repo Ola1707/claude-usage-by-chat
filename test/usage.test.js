@@ -2,7 +2,7 @@ const assert = require("assert");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { weights, weigh, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, planKey, PLAN_LIMITS5H, sessionTotals, sessionUsage, findSessionsByTitle, findSessionByTitle, savedEditorGroups, chatFileForTab, projectDir, activeUsage, activeSessions, parsePs, processTree, processUsage } = require("../usage");
+const { weights, weigh, usage5h, usage7d, estimateLimit5h, sameWindow, addCalibrationReading, excludeWindow, planKey, PLAN_LIMITS5H, sessionTotals, sessionUsage, savedEditorGroups, chatFileForTab, projectDir, activeUsage, activeSessions, parsePs, processTree, processUsage } = require("../usage");
 
 assert.strictEqual(
   weigh({ input_tokens: 10, output_tokens: 2, cache_creation_input_tokens: 4, cache_read_input_tokens: 100 }),
@@ -99,26 +99,6 @@ assert.strictEqual(sessionUsage(sess), 100 + 50);
 // chat begun before the 5h window (started 3h ago): only s1 (1h ago) counts, not subagent m2 (4.9h ago)
 assert.deepStrictEqual(sessionTotals(sess, now - 3 * 3600e3), { total: 150, recent: 100 });
 
-// tab title -> session file (last ai-title wins)
-assert.strictEqual(findSessionByTitle("My chat", path.join(root, "proj")), sess);
-assert.strictEqual(findSessionByTitle("Old", path.join(root, "proj")), undefined);
-assert.strictEqual(findSessionByTitle("My chat", path.join(root, "nothing")), undefined);
-// same title twice: newest file wins, or the one among `only`
-const dup = path.join(root, "proj", "dup.jsonl");
-fs.writeFileSync(dup, JSON.stringify({ type: "ai-title", aiTitle: "My chat" }));
-fs.utimesSync(sess, new Date(Date.now() - 60000), new Date(Date.now() - 60000));
-assert.strictEqual(findSessionByTitle("My chat", path.join(root, "proj")), dup);
-assert.strictEqual(findSessionByTitle("My chat", path.join(root, "proj"), [sess]), sess);
-fs.unlinkSync(dup);
-// two titles that the tab truncates to the same label: both match, so the tab can't tell them apart
-const t1 = path.join(root, "proj", "t1.jsonl"), t2 = path.join(root, "proj", "t2.jsonl");
-fs.writeFileSync(t1, JSON.stringify({ type: "ai-title", aiTitle: "Nightshift start-review e2e fixes" }));
-fs.writeFileSync(t2, JSON.stringify({ type: "ai-title", aiTitle: "Nightshift start-review command" }));
-assert.deepStrictEqual(findSessionsByTitle("Nightshift start-review …", path.join(root, "proj"), [t1, t2]), [t1, t2]);
-assert.deepStrictEqual(findSessionsByTitle("Nightshift start-review command", path.join(root, "proj"), [t1, t2]), [t2]);
-fs.unlinkSync(t1);
-fs.unlinkSync(t2);
-
 // The bug: two closed chats whose titles VS Code truncates to the same tab label. The old chat
 // ("e2e fixes", big) showed the new chat's number, as the newest file with that title won.
 {
@@ -138,13 +118,32 @@ fs.unlinkSync(t2);
   const labels = ["Nightshift start-review …", "Nightshift start-review …", "usage.js", "Keep screen awake"];
   const tab = (index) => ({ label: labels[index], index, labels });
   // each tab finds its own chat by the saved session id
-  assert.deepStrictEqual(chatFileForTab(tab(0), d, saved), { file: path.join(d, "old-e2e.jsonl") });
-  assert.deepStrictEqual(chatFileForTab(tab(1), d, saved), { file: path.join(d, "new-cmd.jsonl") });
-  // no saved tabs (or they don't fit the open ones, e.g. a just-opened tab): never another chat's number
-  assert.deepStrictEqual(chatFileForTab(tab(0), d), { ambiguous: 2 });
-  assert.deepStrictEqual(chatFileForTab({ ...tab(0), labels: [...labels, "New tab"] }, d, saved), { ambiguous: 2 });
-  // a title only one chat has still works without the saved tabs
-  assert.deepStrictEqual(chatFileForTab(tab(3), d), { file: path.join(d, "other.jsonl") });
+  assert.strictEqual(chatFileForTab(tab(0), d, saved), path.join(d, "old-e2e.jsonl"));
+  assert.strictEqual(chatFileForTab(tab(1), d, saved), path.join(d, "new-cmd.jsonl"));
+  assert.strictEqual(chatFileForTab(tab(3), d, saved), path.join(d, "other.jsonl"));
+  // no saved tabs, or they don't fit the open ones (a just-opened tab): unknown, never another chat's number
+  assert.strictEqual(chatFileForTab(tab(0), d), undefined);
+  assert.strictEqual(chatFileForTab({ ...tab(0), labels: [...labels, "New tab"] }, d, saved), undefined);
+}
+
+// NEVER match a chat by its title. Titles are not unique, so a title match shows another chat's number
+// (the bug above). These fail if title matching comes back.
+{
+  const d = path.join(root, "never-title");
+  fs.mkdirSync(d);
+  fs.writeFileSync(path.join(d, "a.jsonl"), JSON.stringify({ type: "ai-title", aiTitle: "Chat A" }));
+  fs.writeFileSync(path.join(d, "b.jsonl"), JSON.stringify({ type: "ai-title", aiTitle: "Chat B" }));
+  const noTitle = "Never match a chat by its title";
+  // a tab whose label is exactly one chat's title, nothing saved: still unknown
+  assert.strictEqual(chatFileForTab({ index: 0, labels: ["Chat A"] }, d), undefined, noTitle);
+  // the saved id wins even when the label is another chat's exact title (renamed chat)
+  const saved = [[{ title: "Chat B", sessionId: "a" }]];
+  assert.strictEqual(chatFileForTab({ index: 0, labels: ["Chat B"] }, d, saved), path.join(d, "a.jsonl"), noTitle);
+  // and no title lookup in the code at all
+  const usage = require("../usage");
+  for (const name of Object.keys(usage)) assert.ok(!/title/i.test(name), `${noTitle}: usage.js exports ${name}`);
+  assert.ok(!/ai-title|aiTitle/.test(fs.readFileSync(path.join(__dirname, "..", "usage.js"), "utf8")), `${noTitle}: usage.js reads ai-titles`);
+  assert.ok(!/ai-title|aiTitle/.test(fs.readFileSync(path.join(__dirname, "..", "extension.js"), "utf8")), `${noTitle}: extension.js reads ai-titles`);
 }
 
 assert.strictEqual(projectDir("/Users/me/Repos/my.app", "/r"), "/r/-Users-me-Repos-my-app");
